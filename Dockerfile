@@ -21,8 +21,8 @@ RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
     apt-get install -y --no-install-recommends nodejs
 	
 # Get LLVM WebAssembly-backend binaries instead of trying to compile them for 4+ hours
-RUN BUILD=$(curl -L https://storage.googleapis.com/wasm-llvm/builds/linux/lkgr.json | jq '.build | tonumber') \
-    curl -L https://storage.googleapis.com/wasm-llvm/builds/linux/$BUILD/wasm-binaries.tbz2 | \
+RUN curl -L https://storage.googleapis.com/wasm-llvm/builds/linux/lkgr.json | jq '.build | tonumber' | tee llvm-build
+RUN curl -L https://storage.googleapis.com/wasm-llvm/builds/linux/$(cat llvm-build)/wasm-binaries.tbz2 | \
     tar xvkj
 	
 RUN curl https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz > emsdk-portable.tar.gz
