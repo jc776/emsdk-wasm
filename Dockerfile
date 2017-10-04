@@ -15,7 +15,8 @@ RUN echo "2017-10-04" && apt-get update && apt-get install -y --no-install-recom
   gdb \
   xz-utils \
   jq \
-  bzip2
+  bzip2 \
+  default-jre
 	
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
     apt-get install -y --no-install-recommends nodejs
@@ -25,16 +26,23 @@ RUN curl -L https://storage.googleapis.com/wasm-llvm/builds/linux/lkgr.json | jq
 RUN curl -L https://storage.googleapis.com/wasm-llvm/builds/linux/$(cat llvm-build)/wasm-binaries.tbz2 | \
     tar xvkj
 	
-RUN curl https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz > emsdk-portable.tar.gz
-RUN tar xzf emsdk-portable.tar.gz
+ENV PATH=/root/wasm-install/emscripten:/root/wasm-install/bin:$PATH
 
-WORKDIR /root/emsdk-portable 
+RUN echo "EMSCRIPTEN_ROOT = '/root/wasm-install/emscripten'" >> /root/.emscripten && \
+    echo "NODE_JS='/usr/bin/node'" >> /root/.emscripten && \
+    echo "LLVM_ROOT='/root/wasm-install/bin'" >> /root/.emscripten && \
+    echo "BINARYEN_ROOT = '/root/wasm-install'" >> /root/.emscripten && \
+    echo "COMPILER_ENGINE = NODE_JS" >> /root/.emscripten && \
+    echo "JS_ENGINES = [NODE_JS]" >> /root/.emscripten
+	
+WORKDIR /root/emcc-warmup
 
-RUN ./emsdk update 
-RUN ./emsdk install --enable-wasm --build=Release sdk-incoming-32bit
-RUN ./emsdk activate --enable-wasm --build=Release sdk-incoming-32bit
-
-RUN echo "LLVM_ROOT='/root/wasm-install/bin'" >> /root/.emscripten
+# No 'node test.js' for now - I'm getting 'fetch is not defined'. Should work in browsers, though...
+RUN emcc --version && \
+    printf '#include <iostream>\nint main(){std::cout<<"HELLO"<<std::endl;return 0;}' > test.cpp && \
+	em++ -O2 test.cpp -o test.js && \
+    em++ -s WASM=1 test.cpp -o test.js && \
+	EMCC_WASM_BACKEND=1 em++ -s WASM=1 test.cpp -o test.js
 
 VOLUME ["/src"]
 WORKDIR /src
