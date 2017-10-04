@@ -23,7 +23,7 @@ RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
 # Get LLVM WebAssembly-backend binaries instead of trying to compile them for 4+ hours
 RUN BUILD=$(curl -L https://storage.googleapis.com/wasm-llvm/builds/linux/lkgr.json | jq '.build | tonumber') \
     curl -L https://storage.googleapis.com/wasm-llvm/builds/linux/$BUILD/wasm-binaries.tbz2 | \
-    hide_output tar xvkj
+    tar xvkj
 	
 RUN curl https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz > emsdk-portable.tar.gz
 RUN tar xzf emsdk-portable.tar.gz
